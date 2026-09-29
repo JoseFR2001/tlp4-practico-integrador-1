@@ -2,8 +2,7 @@
 
 **Trabajo Práctico Integrador — Taller de Lenguaje de Programación IV**  
 **Dominio Elegido:** Biblioteca  
-**Recurso Principal:** Libro (`DISPONIBLE`, `PRESTADO`, `EN_REPARACION`)  
-**Responsable de Patrones de Diseño:** Gonzalo
+**Recurso Principal:** Libro (`DISPONIBLE`, `PRESTADO`, `EN_REPARACION`)
 
 ---
 

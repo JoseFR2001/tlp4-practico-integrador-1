@@ -1,21 +1,13 @@
 import mongoose from 'mongoose';
 
 
- //Características clave:
- //1. Constructor privado (evita que se use `new DatabaseConnection()`).
- //2. Atributo estático privado `instance` que guarda la única instancia.
- //3. Método estático público `getInstance()` que devuelve dicha instancia.
 
  export class DatabaseConnection {
   private static instance: DatabaseConnection | null = null;
   private isConnected = false;
 
-  //Constructor privado: impide instanciación externa directa con "new"
   private constructor() {}
 
-  //Método de acceso global a la única instancia de DatabaseConnection.
-  //Si aún no fue creada, la crea (Lazy Initialization). Si ya existe, devuelve la existente.
-  
   public static getInstance(): DatabaseConnection {
     if (!DatabaseConnection.instance) {
       DatabaseConnection.instance = new DatabaseConnection();
