@@ -145,9 +145,9 @@ export class NotificationService implements IObserver<LibroStatusChangedEvent> {
 
 #### 1. Archivos aplicados
 
-- `backend/src/notifications/INotifier.ts`
-- `backend/src/notifications/InAppNotifier.ts`
-- `backend/src/notifications/NotifierFactory.ts`
+- `backend/src/modules/notifications/INotifier.ts`
+- `backend/src/modules/notifications/InAppNotifier.ts`
+- `backend/src/modules/notifications/NotifierFactory.ts`
 
 #### 2. Qué problema resuelve
 
@@ -187,7 +187,7 @@ export class NotifierFactory {
 
 #### 1. Archivo aplicado
 
-- `backend/src/notifications/ConsoleNotifierAdapter.ts`
+- `backend/src/modules/notifications/ConsoleNotifierAdapter.ts`
 
 #### 2. Qué problema resuelve
 
@@ -213,11 +213,11 @@ export class ConsoleNotifierAdapter implements INotifier {
 ## 3. Principios SOLID Aplicados
 
 ### 3.1 S — Single Responsibility Principle (Responsabilidad Única)
-
+ 
 - **Archivos:**
   - `backend/src/observer/EventPublisher.ts`
-  - `backend/src/notifications/ConsoleNotifierAdapter.ts`
-  - `backend/src/notifications/InAppNotifier.ts`
+  - `backend/src/modules/notifications/ConsoleNotifierAdapter.ts`
+  - `backend/src/modules/notifications/InAppNotifier.ts`
 - **Problema que resuelve:** Cada clase tiene una única razón para cambiar. `EventPublisher` solo gestiona observadores y distribuye eventos; `ConsoleNotifierAdapter` solo formatea e imprime en consola; `InAppNotifier` solo se encarga de guardar la notificación en la base de datos. Si cambia el formato de logueo, solo se modifica `ConsoleNotifierAdapter` sin afectar la lógica de negocio.
 - **Fragmento:**
 
@@ -237,9 +237,9 @@ export class ConsoleNotifierAdapter implements INotifier {
 ### 3.2 O — Open/Closed Principle (Abierto / Cerrado)
 
 - **Archivos:**
-  - `backend/src/notifications/INotifier.ts`
-  - `backend/src/notifications/NotifierFactory.ts`
-  - `backend/src/services/NotificationService.ts`
+  - `backend/src/modules/notifications/INotifier.ts`
+  - `backend/src/modules/notifications/NotifierFactory.ts`
+  - `backend/src/modules/notifications/NotificationService.ts`
 - **Problema que resuelve:** El sistema está abierto a la extensión pero cerrado a la modificación. Si en el futuro se desea agregar un canal de notificación nuevo (por ejemplo, `EmailNotifier` o `TelegramNotifier`), solo se debe crear la nueva clase que implemente `INotifier` y agregar un caso en `NotifierFactory`. `NotificationService` no necesita modificarse en absoluto.
 - **Fragmento:**
 
@@ -254,9 +254,9 @@ await notifier.send(payload);
 ### 3.3 L — Liskov Substitution Principle (Sustitución de Liskov)
 
 - **Archivos:**
-  - `backend/src/notifications/INotifier.ts`
-  - `backend/src/notifications/InAppNotifier.ts`
-  - `backend/src/notifications/ConsoleNotifierAdapter.ts`
+  - `backend/src/modules/notifications/INotifier.ts`
+  - `backend/src/modules/notifications/InAppNotifier.ts`
+  - `backend/src/modules/notifications/ConsoleNotifierAdapter.ts`
 - **Problema que resuelve:** Tanto `InAppNotifier` como `ConsoleNotifierAdapter` implementan la interfaz `INotifier`. Cualquier parte del código que espere un `INotifier` puede recibir cualquiera de las dos implementaciones y ejecutar `send(payload)` sin que el comportamiento esperado del sistema falle ni requiera validaciones de tipos con `instanceof`.
 - **Fragmento:**
 
@@ -278,8 +278,8 @@ for (const notifier of notifiers) {
 - **Archivos:**
   - `backend/src/observer/ISubject.ts`
   - `backend/src/observer/IObserver.ts`
-  - `backend/src/repositories/interfaces/ISubscriptionRepository.ts`
-  - `backend/src/repositories/interfaces/INotificationRepository.ts`
+  - `backend/src/modules/subscriptions/ISubscriptionRepository.ts`
+  - `backend/src/modules/notifications/INotificationRepository.ts`
 - **Problema que resuelve:** En lugar de crear una interfaz gigantesca con métodos mezclados, se crearon interfaces pequeñas, cohesivas y específicas para cada responsabilidad. Por ejemplo, `ISubject` solo declara `attach`, `detach` y `notify`, mientras que `IObserver` solo declara `update`.
 - **Fragmento:**
 
@@ -300,10 +300,10 @@ export interface ISubject<T = unknown> {
 ### 3.5 D — Dependency Inversion Principle (Inversión de Dependencias)
 
 - **Archivos:**
-  - `backend/src/services/NotificationService.ts`
-  - `backend/src/repositories/interfaces/ISubscriptionRepository.ts`
-  - `backend/src/repositories/interfaces/IUserRepository.ts`
-  - `backend/src/repositories/interfaces/INotificationRepository.ts`
+  - `backend/src/modules/notifications/NotificationService.ts`
+  - `backend/src/modules/subscriptions/ISubscriptionRepository.ts`
+  - `backend/src/modules/users/IUserRepository.ts`
+  - `backend/src/modules/notifications/INotificationRepository.ts`
 - **Problema que resuelve:** Los módulos de alto nivel (como `NotificationService`) no dependen de módulos de bajo nivel (como modelos de Mongoose directos o consultas a colecciones de MongoDB), sino que dependen de abstracciones (interfaces como `ISubscriptionRepository`, `IUserRepository`, `INotificationRepository`). Las dependencias se inyectan a través del constructor.
 - **Fragmento:**
 
