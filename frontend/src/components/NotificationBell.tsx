@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { notificationsApi } from '../api/notifications.api';
 import { useAuth } from '../context/useAuth';
+import { BellIcon } from './Icons';
 
 interface NotificationBellProps {
   onNavigate: () => void;
+  isActive: boolean;
 }
 
-export const NotificationBell: React.FC<NotificationBellProps> = ({ onNavigate }) => {
+export const NotificationBell: React.FC<NotificationBellProps> = ({ onNavigate, isActive }) => {
   const { token } = useAuth();
   const [unreadCount, setUnreadCount] = useState<number>(0);
 
@@ -38,33 +40,16 @@ export const NotificationBell: React.FC<NotificationBellProps> = ({ onNavigate }
 
   return (
     <button
+      type="button"
       onClick={onNavigate}
-      style={{
-        position: 'relative',
-        background: 'none',
-        border: 'none',
-        fontSize: '1.25rem',
-        cursor: 'pointer',
-        padding: '0.25rem 0.5rem',
-      }}
-      title="Bandeja de Notificaciones"
+      className={`bell-trigger ${isActive ? 'active' : ''}`}
+      title="Bandeja de Notificaciones (Observer)"
+      aria-label={`Notificaciones ${unreadCount > 0 ? `(${unreadCount} no leídas)` : ''}`}
     >
-      🔔
+      <BellIcon size={20} />
       {unreadCount > 0 && (
-        <span
-          style={{
-            position: 'absolute',
-            top: '-2px',
-            right: '-4px',
-            backgroundColor: '#e53e3e',
-            color: 'white',
-            borderRadius: '50%',
-            padding: '2px 6px',
-            fontSize: '0.75rem',
-            fontWeight: 'bold',
-          }}
-        >
-          {unreadCount}
+        <span className="bell-badge" aria-hidden="true">
+          {unreadCount > 99 ? '99+' : unreadCount}
         </span>
       )}
     </button>

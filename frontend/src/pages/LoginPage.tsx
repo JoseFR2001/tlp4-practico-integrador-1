@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { authApi } from '../api/auth.api';
 import { useAuth } from '../context/useAuth';
+import { useToast } from '../context/useToast';
+import { BookOpenIcon, SparklesIcon } from '../components/Icons';
 
 interface LoginPageProps {
   onSuccess: () => void;
@@ -9,6 +11,7 @@ interface LoginPageProps {
 
 export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onGoToRegister }) => {
   const { login } = useAuth();
+  const toast = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -22,9 +25,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onGoToRegister 
     try {
       const res = await authApi.login(email, password);
       login(res.token, res.user);
+      toast.success(`¡Bienvenido de nuevo, ${res.user.nombre}!`);
       onSuccess();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al iniciar sesión');
+      const msg = err instanceof Error ? err.message : 'Error al iniciar sesión';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -33,68 +39,134 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onSuccess, onGoToRegister 
   const handleQuickLogin = (demoEmail: string) => {
     setEmail(demoEmail);
     setPassword('123456');
+    setError(null);
+    toast.info(`Credenciales completadas para ${demoEmail}`);
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '3rem auto', padding: '2rem', border: '1px solid #e2e8f0', borderRadius: '8px', backgroundColor: '#fff' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Iniciar Sesión</h2>
-      {error && <div style={{ color: '#e53e3e', marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#fff5f5', borderRadius: '4px' }}>{error}</div>}
-
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e0', boxSizing: 'border-box' }}
-          />
+    <div className="auth-page-wrapper">
+      <div className="auth-card">
+        <div className="auth-header">
+          <div className="auth-brand-icon">
+            <BookOpenIcon size={28} />
+          </div>
+          <h2 className="auth-title heading-serif">Acceso a BookQuery</h2>
+          <p className="auth-subtitle">
+            Gestión bibliotecaria con notificaciones reactivas (Patrón Observer)
+          </p>
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>Contraseña</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e0', boxSizing: 'border-box' }}
-          />
+        {error && (
+          <div
+            style={{
+              padding: '0.85rem 1rem',
+              backgroundColor: '#fff1f2',
+              color: '#e11d48',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.88rem',
+              marginBottom: '1.25rem',
+              border: '1px solid #fecdd3',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+            }}
+          >
+            <span>{error}</span>
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label" htmlFor="login-email">
+              Correo Electrónico
+            </label>
+            <input
+              id="login-email"
+              type="email"
+              className="form-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="ejemplo@tp.com"
+              required
+              autoFocus
+            />
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="login-password">
+              Contraseña
+            </label>
+            <input
+              id="login-password"
+              type="password"
+              className="form-input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="••••••••"
+              required
+            />
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary btn-lg"
+            style={{ width: '100%', marginTop: '0.5rem' }}
+            disabled={loading}
+          >
+            {loading ? 'Ingresando al sistema...' : 'Ingresar a la Biblioteca'}
+          </button>
+        </form>
+
+        {/* Demo Roles Bar */}
+        <div className="demo-credentials-box">
+          <div className="demo-title">
+            <span>Accesos rápidos de evaluación (pass: 123456)</span>
+            <SparklesIcon size={14} />
+          </div>
+          <div className="demo-chips">
+            <button
+              type="button"
+              className="demo-chip"
+              onClick={() => handleQuickLogin('admin@tp.com')}
+              title="Rol: admin (Permisos totales + Panel de usuarios)"
+            >
+              👑 Admin
+            </button>
+            <button
+              type="button"
+              className="demo-chip"
+              onClick={() => handleQuickLogin('operador@tp.com')}
+              title="Rol: operador (Cambio de estados y disparador del Observer)"
+            >
+              ⚡ Operador
+            </button>
+            <button
+              type="button"
+              className="demo-chip"
+              onClick={() => handleQuickLogin('usuario@tp.com')}
+              title="Rol: usuario (Suscripción y recepción de notificaciones)"
+            >
+              📖 Lector
+            </button>
+          </div>
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            backgroundColor: '#3182ce',
-            color: 'white',
-            padding: '0.75rem',
-            border: 'none',
-            borderRadius: '4px',
-            fontWeight: 'bold',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {loading ? 'Ingresando...' : 'Entrar'}
-        </button>
-      </form>
-
-      <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid #edf2f7', fontSize: '0.85rem' }}>
-        <p style={{ margin: '0 0 0.5rem 0', fontWeight: 'bold' }}>Accesos rápidos de prueba (pass: 123456):</p>
-        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-          <button type="button" onClick={() => handleQuickLogin('admin@tp.com')} style={{ padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}>Admin</button>
-          <button type="button" onClick={() => handleQuickLogin('operador@tp.com')} style={{ padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}>Operador</button>
-          <button type="button" onClick={() => handleQuickLogin('usuario@tp.com')} style={{ padding: '2px 8px', fontSize: '0.8rem', cursor: 'pointer' }}>Usuario</button>
-        </div>
+        <p style={{ textAlign: 'center', marginTop: '1.75rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+          ¿Aún no tienes cuenta?{' '}
+          <button
+            type="button"
+            onClick={onGoToRegister}
+            style={{
+              color: 'var(--primary-600)',
+              fontWeight: 700,
+              textDecoration: 'underline',
+              cursor: 'pointer',
+            }}
+          >
+            Crear cuenta nueva
+          </button>
+        </p>
       </div>
-
-      <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.9rem' }}>
-        ¿No tienes cuenta?{' '}
-        <span onClick={onGoToRegister} style={{ color: '#3182ce', cursor: 'pointer', textDecoration: 'underline' }}>
-          Regístrate aquí
-        </span>
-      </p>
     </div>
   );
 };

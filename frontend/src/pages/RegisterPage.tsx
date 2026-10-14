@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { authApi } from '../api/auth.api';
 import { useAuth } from '../context/useAuth';
+import { useToast } from '../context/useToast';
+import { BookOpenIcon } from '../components/Icons';
 
 interface RegisterPageProps {
   onSuccess: () => void;
@@ -9,6 +11,7 @@ interface RegisterPageProps {
 
 export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess, onGoToLogin }) => {
   const { login } = useAuth();
+  const toast = useToast();
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -23,76 +26,122 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ onSuccess, onGoToLog
     try {
       const res = await authApi.register(email, password, nombre);
       login(res.token, res.user);
+      toast.success(`¡Registro exitoso! Bienvenido a BookQuery, ${res.user.nombre}`);
       onSuccess();
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : 'Error al registrarse');
+      const msg = err instanceof Error ? err.message : 'Error al registrarse';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '3rem auto', padding: '2rem', border: '1px solid #e2e8f0', borderRadius: '8px', backgroundColor: '#fff' }}>
-      <h2 style={{ textAlign: 'center', marginBottom: '1.5rem' }}>Registro de Usuario</h2>
-      {error && <div style={{ color: '#e53e3e', marginBottom: '1rem', padding: '0.5rem', backgroundColor: '#fff5f5', borderRadius: '4px' }}>{error}</div>}
-
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>Nombre completo</label>
-          <input
-            type="text"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e0', boxSizing: 'border-box' }}
-          />
+    <div className="auth-page-wrapper">
+      <div className="auth-card">
+        <div className="auth-header">
+          <div className="auth-brand-icon">
+            <BookOpenIcon size={28} />
+          </div>
+          <h2 className="auth-title heading-serif">Crear Nueva Cuenta</h2>
+          <p className="auth-subtitle">
+            Regístrate para explorar el catálogo y recibir alertas en tiempo real
+          </p>
         </div>
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e0', boxSizing: 'border-box' }}
-          />
-        </div>
+        {error && (
+          <div
+            style={{
+              padding: '0.85rem 1rem',
+              backgroundColor: '#fff1f2',
+              color: '#e11d48',
+              borderRadius: 'var(--radius-sm)',
+              fontSize: '0.88rem',
+              marginBottom: '1.25rem',
+              border: '1px solid #fecdd3',
+            }}
+          >
+            {error}
+          </div>
+        )}
 
-        <div>
-          <label style={{ display: 'block', marginBottom: '0.25rem', fontWeight: 500 }}>Contraseña</label>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            style={{ width: '100%', padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e0', boxSizing: 'border-box' }}
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label" htmlFor="register-nombre">
+              Nombre y Apellido
+            </label>
+            <input
+              id="register-nombre"
+              type="text"
+              className="form-input"
+              value={nombre}
+              onChange={(e) => setNombre(e.target.value)}
+              placeholder="Ej. Ana García"
+              required
+              autoFocus
+            />
+          </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          style={{
-            backgroundColor: '#38a169',
-            color: 'white',
-            padding: '0.75rem',
-            border: 'none',
-            borderRadius: '4px',
-            fontWeight: 'bold',
-            cursor: loading ? 'not-allowed' : 'pointer',
-          }}
-        >
-          {loading ? 'Creando cuenta...' : 'Registrarse'}
-        </button>
-      </form>
+          <div className="form-group">
+            <label className="form-label" htmlFor="register-email">
+              Correo Electrónico
+            </label>
+            <input
+              id="register-email"
+              type="email"
+              className="form-input"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="ana.garcia@tp.com"
+              required
+            />
+          </div>
 
-      <p style={{ textAlign: 'center', marginTop: '1.5rem', fontSize: '0.9rem' }}>
-        ¿Ya tienes cuenta?{' '}
-        <span onClick={onGoToLogin} style={{ color: '#3182ce', cursor: 'pointer', textDecoration: 'underline' }}>
-          Inicia sesión aquí
-        </span>
-      </p>
+          <div className="form-group">
+            <label className="form-label" htmlFor="register-password">
+              Contraseña
+            </label>
+            <input
+              id="register-password"
+              type="password"
+              className="form-input"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Mínimo 6 caracteres"
+              required
+            />
+            <span className="form-hint">
+              Por especificación (RF2), se te asignará el rol inicial <strong>usuario (lector)</strong>.
+            </span>
+          </div>
+
+          <button
+            type="submit"
+            className="btn btn-primary btn-lg"
+            style={{ width: '100%', marginTop: '0.5rem' }}
+            disabled={loading}
+          >
+            {loading ? 'Creando cuenta...' : 'Completar Registro'}
+          </button>
+        </form>
+
+        <p style={{ textAlign: 'center', marginTop: '1.75rem', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+          ¿Ya tienes cuenta registrada?{' '}
+          <button
+            type="button"
+            onClick={onGoToLogin}
+            style={{
+              color: 'var(--primary-600)',
+              fontWeight: 700,
+              textDecoration: 'underline',
+              cursor: 'pointer',
+            }}
+          >
+            Inicia sesión aquí
+          </button>
+        </p>
+      </div>
     </div>
   );
 };

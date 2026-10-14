@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './context/ToastContext';
 import { useAuth } from './context/useAuth';
 import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
@@ -9,11 +10,13 @@ import { BookDetailPage } from './pages/BookDetailPage';
 import { BookFormPage } from './pages/BookFormPage';
 import { NotificationsPage } from './pages/NotificationsPage';
 import { AdminUsersPage } from './pages/AdminUsersPage';
+import { PatternsModal } from './components/ui/PatternsModal';
 
 function AppContent() {
   const { user } = useAuth();
   const [currentPage, setCurrentPage] = useState<string>('books');
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
+  const [isPatternsModalOpen, setIsPatternsModalOpen] = useState(false);
 
   const renderPage = () => {
     // Si no está autenticado y no está en register, mostrar login
@@ -41,7 +44,10 @@ function AppContent() {
           <BookDetailPage
             bookId={selectedBookId}
             onBack={() => setCurrentPage('books')}
-            onDeleted={() => setCurrentPage('books')}
+            onDeleted={() => {
+              setSelectedBookId(null);
+              setCurrentPage('books');
+            }}
           />
         ) : (
           <BookListPage
@@ -65,7 +71,17 @@ function AppContent() {
         return <NotificationsPage />;
 
       case 'admin':
-        return <AdminUsersPage />;
+        return user.rol === 'admin' ? (
+          <AdminUsersPage />
+        ) : (
+          <BookListPage
+            onSelectBook={(id) => {
+              setSelectedBookId(id);
+              setCurrentPage('book-detail');
+            }}
+            onCreateBook={() => setCurrentPage('book-form')}
+          />
+        );
 
       case 'books':
       default:
@@ -82,9 +98,44 @@ function AppContent() {
   };
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: '#f7fafc', fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-      <Navbar currentPage={currentPage} onNavigate={(p) => setCurrentPage(p)} />
-      <main style={{ paddingBottom: '3rem' }}>{renderPage()}</main>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <Navbar
+        currentPage={currentPage}
+        onNavigate={(p) => setCurrentPage(p)}
+        onOpenPatterns={() => setIsPatternsModalOpen(true)}
+      />
+
+      <main style={{ flex: 1 }}>{renderPage()}</main>
+
+      {/* Footer */}
+      <footer
+        style={{
+          borderTop: '1px solid var(--border-subtle)',
+          background: '#fff',
+          padding: '1.75rem 1.5rem',
+          textAlign: 'center',
+          color: 'var(--text-muted)',
+          fontSize: '0.82rem',
+        }}
+      >
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+          <div>
+            <strong style={{ color: 'var(--text-main)', fontFamily: 'var(--font-serif)' }}>BookQuery</strong> — Sistema de Biblioteca con Patrón Observer
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <span>Arquitectura SOLID:</span>
+            <code style={{ fontSize: '0.78rem', background: 'var(--bg-subtle)', padding: '2px 6px', borderRadius: '4px' }}>
+              Singleton · Observer · Factory · Adapter
+            </code>
+          </div>
+        </div>
+      </footer>
+
+      {/* Patterns Academic Modal */}
+      <PatternsModal
+        isOpen={isPatternsModalOpen}
+        onClose={() => setIsPatternsModalOpen(false)}
+      />
     </div>
   );
 }
@@ -92,7 +143,9 @@ function AppContent() {
 export function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ToastProvider>
+        <AppContent />
+      </ToastProvider>
     </AuthProvider>
   );
 }
